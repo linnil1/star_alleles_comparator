@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "star_allele_comp"
+version = "0.1"
+dependencies = [
+    "pandas",
+    "pandas-stubs",
+    "plotly",
+    "kaleido",
+]
+
+description = "Utility to compare star alleles"
+authors = [
+    {name = "linnil1"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["HLA", "KIR", "comparator", "allele", "star-allele"]
+license = {text = "MIT License"}
+classifiers = [ 
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Typing :: Typed",
+]
+
+[tool.setuptools]
+packages = ["star_allele_comp"]
+
+[tool.setuptools.package-data]
+star_allele_comp = ["py.typed"]
+
+[project.scripts]
+star_allele_comp = "star_allele_comp.command:entrypoint"
+
+[[tool.mypy.overrides]]
+ module = "plotly.*"
+ ignore_missing_imports = true
