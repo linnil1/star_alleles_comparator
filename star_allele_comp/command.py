@@ -20,10 +20,9 @@ def create_parser() -> argparse.ArgumentParser:
     """Create argument parser"""
     parser = argparse.ArgumentParser(description="Star Allele Comparator")
     parser.add_argument(
-        "--csv",
+        "csv",
         nargs="+",
-        required=True,
-        metavar=("file1.csv", "file2.csv"),
+        metavar="file1.csv file2.csv ...",
         help="CSV files for allele calling data",
     )
     parser.add_argument(
@@ -33,9 +32,8 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--family",
-        required=True,
         choices=["HLA", "KIR", "hla", "kir"],
-        default="hla",
+        default="HLA",
         help="Choose 'HLA' or 'KIR' family for comparison",
     )
 
@@ -43,7 +41,11 @@ def create_parser() -> argparse.ArgumentParser:
     # parser.add_argument("--summary-type", nargs="+", help="Restrict summary type to print/save")
     parser.add_argument("--plot", action="store_true", help="Enable plotting")
     parser.add_argument(
-        "--save", metavar="path/to/save", help="Saving all results in [path].xxx.oo"
+        "--save",
+        nargs="?",
+        metavar="path/to/save",
+        help="Saving all results in [path].xxx.oo",
+        const="output",  # the default if '--save [empty]'
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable output to screen"

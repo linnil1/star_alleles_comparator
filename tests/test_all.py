@@ -1,7 +1,5 @@
-import os
 import subprocess
 
-# from summary import test
 import pytest
 from star_allele_comp import *
 from star_allele_comp.command import entrypoint
@@ -26,21 +24,25 @@ def test_allele():
     HlaAllele("A*123#non-digit-char-is-treated-as-comment.1.2.3")
 
     # KIR
-    KirAllele("KIR2Dl1*")
-    assert KirAllele("KIR2Dl1*").resolution == 0
-    KirAllele("KIR2Dl1*new")
-    assert KirAllele("KIR2Dl1*new").resolution == 1
-    KirAllele("KIR2Dl1*001")
-    KirAllele("KIR2Dl1*00105")
-    KirAllele("KIR2Dl1*00105N")
-    KirAllele("KIR2Dl1*00105NN")
-    KirAllele("KIR2Dl1*0010101")
-    assert KirAllele("KIR2Dl1*0010203").resolution == 3
-    KirAllele("KIR2Dl1*00101001#ok-comment")
+    KirAllele("KIR2DL1*")
+    assert KirAllele("KIR2DL1*").resolution == 0
+    KirAllele("KIR2DL1*new")
+    assert KirAllele("KIR2DL1*new").resolution == 1
+    KirAllele("KIR2DL1*001")
+    KirAllele("KIR2DL1*00105")
+    KirAllele("KIR2DL1*00105N")
+    KirAllele("KIR2DL1*00105NN")
+    KirAllele("KIR2DL1*0010101")
+    assert KirAllele("KIR2DL1*0010203").resolution == 3
+    KirAllele("KIR2DL1*00101001#ok-comment")
     with pytest.raises(AlleleError):
-        KirAllele("KIR2Dl1*0010")
+        KirAllele("KIR2DL1*0010")
     with pytest.raises(AlleleError):
-        KirAllele("KIR2Dl1*0010N")
+        KirAllele("KIR2DL1*0010N")
+
+    assert KirAllele("KIR2DL1*0010203").trim_resolution(2) == KirAllele("KIR2DL1*00102")
+    assert KirAllele("KIR2DL1*00102").trim_resolution(2) == KirAllele("KIR2DL1*00102")
+    assert KirAllele("KIR2DL1*001").trim_resolution(2) == KirAllele("KIR2DL1*001")
 
 
 def test_compare_cohort():
@@ -137,6 +139,58 @@ def test_compare_method():
     ]
 
 
+def test_summary():
+    method_cohort = {
+        "method1": {
+            "id": [
+                "2DL1*0010203",
+                "2DL2*00102",
+                "2DL3*0010203",
+                "2DL4*0010203",
+                "2DL5*0010203",
+            ]
+        },
+        "method2": {
+            "id": [
+                "2DL1*0010208",
+                "2DL2*00102",
+                "2DL3*0020203",
+                "2DL4*001",
+                "2DL5*0010203",
+            ]
+        },
+        "method3": {"id": ["2DL1*0010208", "2DL2*00108", "2DL3*0030203", "2DL5A*001"]},
+    }
+    result = compare_method(method_cohort, "method1", "kir")
+    result = result.to_dataframe()
+    result_df = table_summarize(result)
+    result_df = result_df.reset_index()
+    print(result_df)
+
+    def get_value(metric, method_want, resolution_want):
+        return result_df.query(
+            f"method == '{method_want}' and Resolution == '{resolution_want}'"
+        ).iloc[0][metric]
+
+    # [i.match_res for i in result["method1"]["id"]] == [3, 2, 3, 3, 3]
+    assert get_value("Accuracy", "method1", 3) == 1.0
+    assert get_value("Accuracy", "method1", "FN") == 0.0
+
+    # [i.match_str for i in result["method2"]["id"]] == ["2", "2", "0", "1", "3"]
+    assert get_value("num_match", "method2", "3") == 1  # 3
+    assert get_value("num_match", "method2", "2") == 3  # 3 2 2
+    assert get_value("num_match", "method2", "1") == 4  # 3 2 2 1
+    assert get_value("num_match", "method2", "0") == 5  # 3 2 2 1 0
+    assert get_value("Accuracy", "method2", "3") == 1 / 4
+    assert get_value("Accuracy", "method2", "2") == 3 / 5
+    assert get_value("Accuracy", "method2", "1") == 4 / 5
+
+    # [i.match_str for i in result["method3"]["id"]] == ["2", "1", "0", "FN", "FN", "FP"]
+    assert get_value("num_match", "method3", "FN") == 2
+    assert get_value("num_match", "method3", "FP") == 1
+    assert get_value("num_match", "method3", "0") == 3  # 2 1 0
+
+
 @pytest.fixture
 def cohort():
     cohort1 = {
@@ -167,7 +221,7 @@ def cohort():
     }
 
 
-def test_summary(cohort, tmp_path):
+def test_summary_no_error(cohort, tmp_path):
     result1 = compare_cohort(cohort["method1"], cohort["method2"], "hla")
     result1_df = result1.to_dataframe()
     print(result1)
@@ -181,7 +235,7 @@ def test_summary(cohort, tmp_path):
     save_all_summary(result2_df, tmp_path)
 
 
-def test_plot(cohort, tmp_path):
+def test_plot_no_error(cohort, tmp_path):
     result1 = compare_method(cohort, "method1", "hla")
     result1_df = result1.to_dataframe()
     for fig in list(plot_summary(result1_df)):
@@ -193,10 +247,10 @@ def test_plot(cohort, tmp_path):
         fig.write_image(tmp_path / "fig2.png")
 
 
-def test_command(tmp_path):
-    command = f"star_allele_comp --csv tests/test1.csv tests/test2.csv --family hla --ref tests/test1.csv  --save {tmp_path} --plot"
+def test_command_no_error(tmp_path):
+    command = f"star_allele_comp tests/test1.csv tests/test2.csv --family hla --ref tests/test1.csv  --save {tmp_path} --plot"
     entrypoint(command.split()[1:])
 
-    command = f"star_allele_comp --csv tests/test3.csv --family hla --save {tmp_path}/ --plot"
+    command = f"star_allele_comp tests/test3.csv --family hla --save {tmp_path}/ --plot"
     proc = subprocess.run(command, shell=True)
     assert proc.returncode == 0

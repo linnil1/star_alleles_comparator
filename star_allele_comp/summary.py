@@ -132,7 +132,6 @@ def table_summarize(results_df: pd.DataFrame) -> pd.DataFrame:
     #     )
     # print(f"{resolution:2d}: {res_match:3d} / {res_ref:3d} = {np.divide(res_match,res_ref):.3f}")
     # print(f"FP: {:3d}")
-    print(df_res)
     return df_res
 
 
@@ -149,7 +148,7 @@ def table_summarize_group_by(
     return results_summary_df
 
 
-def compact_summary(df_res: pd.DataFrame, group_by: list[str] = []) -> pd.DataFrame:
+def compact_summary(df_res: pd.DataFrame, group_by: Iterable[str] = []) -> pd.DataFrame:
     """
     Transform summary in table_summarize into one line.
 
@@ -206,7 +205,7 @@ def get_summary_meta(summary_type: Iterable[str] = []) -> dict[str, dict[str, An
             "compact": idenity,
         },
         "accuracy": {
-            "title": "# Accuracy summary per resolution (one-line version)",
+            "title": "# Resolution Accuracy summary (one-line version)",
             "func": lambda df: table_summarize(df),
             "compact": compact_summary,
         },
@@ -216,12 +215,12 @@ def get_summary_meta(summary_type: Iterable[str] = []) -> dict[str, dict[str, An
             "compact": idenity,
         },
         "accuracy-sample": {
-            "title": "# Accuracy summary per resolution per sample",
+            "title": "# Sample Accuracy summary per resolution",
             "func": lambda df: table_summarize_group_by(df, group_by="id"),
             "compact": lambda df: compact_summary(df, group_by=["id"]),
         },
         "accuracy-gene": {
-            "title": "# Accuracy summary per resolution per gene",
+            "title": "# Gene Accuracy summary per resolution",
             "func": lambda df: table_summarize_group_by(df, group_by="gene"),
             "compact": lambda df: compact_summary(df, group_by=["gene"]),
         },
