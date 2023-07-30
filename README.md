@@ -1,4 +1,4 @@
-# Star Allele Comparator (star_allele_comp)
+# Star Alleles Comparator (star_allele_comp)
 
 The comparator can compare HLA or KIR alleles between cohorts
 
@@ -23,6 +23,13 @@ The results will output to screen and save in .txt and .csv format.
 The example output is the same as below (see next section).
 
 The input CSV should adhere to the following format:
+
+Columns
+* `id` (**required**): The sample ID.
+* `method` (**optinal**): The method.  If not specified, filename will be used.
+* `allele*` (**required**) Columns starting with `allele` will be used to store the allele for each id/sample with corresponding method.
+    The value can be NULL, empty.
+
 
 #### Format 1: Separate Columns for Alleles
 
@@ -52,12 +59,6 @@ method2,id4,"KIR2DL1*0010203_KIR2DL1*0010203_KIR2DS1*0010202_KIR2DS1*0040302"
 method2,id4,"KIR2DL1*00303_KIR2DL1*03002"
 ```
 
-#### Additional CSV Rules
-
-* The input CSV should contain an `id` column for the sample ID.
-* An optional `method` column can be included to indicate the method used for the sample.  If the method column is not specified, filename will be used.
-* Columns starting with `allele` will be used to store the allele for each sample.
-
 
 ### 2. Using Python functions
 
@@ -84,7 +85,7 @@ print(result)
 # B*01:01:01:01    =1= B*01:02:02:01
 # B*03:01          =0= B*04:01:02
 # Note:
-# Left hand side is alleles in reference method/cohort
+# Left hand side is the alleles in reference method/cohort
 # Right hand side is the allele in another method/cohort
 ```
 
@@ -122,6 +123,9 @@ Confusion matrix (not the same sample)
  2              1  0  2  6  0
  3              0  0  0  0  1
  4              0  0  0  0  1
+
+ # Note
+ # -1 indicates FP or FN
 
 
 Accuracy summary per resolution per gene

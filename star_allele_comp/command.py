@@ -70,7 +70,9 @@ def read_file(filename: str) -> Iterable[tuple[str, str, list[str]]]:
 
     for _, row in df_raw.iterrows():
         yield row.method, row.id, [
-            row[col].strip() for col in column_allele if not pd.isnull(row[col])
+            row[col].strip()
+            for col in column_allele
+            if not pd.isnull(row[col]) and row[col].strip()
         ]
         if "alleles" in df_raw.columns:
             yield row.method, row.id, [
@@ -111,7 +113,7 @@ def entrypoint(commands: list[str] | None = None) -> None:
         print(result)
         print_all_summary(result_df)
 
-    elif path_save:
+    if path_save:
         with open(path_save + ".summary.txt", "w") as f_handle:
             print_all_summary(result_df, file_handler=f_handle)
             print(result, file=f_handle)

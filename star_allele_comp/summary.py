@@ -203,26 +203,34 @@ def get_summary_meta(summary_type: Iterable[str] = []) -> dict[str, dict[str, An
             "title": "# Raw dataframe",
             "func": idenity,
             "compact": idenity,
+            # = df
         },
         "accuracy": {
             "title": "# Resolution Accuracy summary (one-line version)",
-            "func": lambda df: table_summarize(df),
+            "func": table_summarize,
             "compact": compact_summary,
+            # = table_summarize(df)
+            # = compact_summary(table_summarize(df))
         },
         "confusion": {
             "title": "# Confusion matrix",
             "func": table_confusion,
             "compact": idenity,
+            # = table_confusion(df)
         },
         "accuracy-sample": {
             "title": "# Sample Accuracy summary per resolution",
             "func": lambda df: table_summarize_group_by(df, group_by="id"),
             "compact": lambda df: compact_summary(df, group_by=["id"]),
+            # = table_summarize_group_by(df, group_by="id")
+            # = compact_summary(table_summarize_group_by(df, group_by="id"), group_by=["id"])
         },
         "accuracy-gene": {
             "title": "# Gene Accuracy summary per resolution",
             "func": lambda df: table_summarize_group_by(df, group_by="gene"),
             "compact": lambda df: compact_summary(df, group_by=["gene"]),
+            # = table_summarize_group_by(df, group_by="gene")
+            # = compact_summary(table_summarize_group_by(df, group_by="gene"), group_by=["gene"])
         },
     }
     if not summary_type:
