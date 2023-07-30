@@ -29,6 +29,11 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.urls]
+repository = "https://github.com/linnil1/star_alleles_comparator"
+homepage = "https://github.com/linnil1/star_alleles_comparator"
+"Homepage" = "https://github.com/linnil1/star_alleles_comparator"
+
 [tool.setuptools]
 packages = ["star_allele_comp"]
 
