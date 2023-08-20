@@ -23,6 +23,14 @@ def test_allele():
         HlaAllele("A*123:01:")
     HlaAllele("A*123#non-digit-char-is-treated-as-comment.1.2.3")
 
+    # test ignore_suffix
+    HlaAllele("A*123:01w")
+    assert HlaAllele("A*123:01w", ignore_suffix=True).trim_resolution(2) == HlaAllele("A*123:01")
+    assert HlaAllele("A*123:01", ignore_suffix=True).trim_resolution(2) == HlaAllele("A*123:01")
+    KirAllele("2DL1*1230101w")
+    assert KirAllele("2DL1*1230101w", ignore_suffix=True).trim_resolution(3) == KirAllele("2DL1*1230101")
+    assert KirAllele("2DL1*1230101", ignore_suffix=True).trim_resolution(3) == KirAllele("2DL1*1230101")
+
     # KIR
     KirAllele("KIR2DL1*")
     assert KirAllele("KIR2DL1*").resolution == 0

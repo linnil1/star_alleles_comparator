@@ -45,6 +45,7 @@ class Allele:
     allele: str = ""
     parts: tuple[str, ...] = field(init=False, compare=False)
     max_resolution: ClassVar[int]
+    ignore_suffix: bool = False
 
     def __format__(self, *args: Any) -> str:
         return self.allele.__format__(*args)
@@ -141,7 +142,14 @@ class HlaAllele(Allele):
         part_allele = allele_str.split(":")
         if not all(part_allele):
             raise ValueError
-        return (gene_str, *part_allele[:4])
+        part_allele = part_allele[:4]
+        if (
+            self.ignore_suffix
+            and part_allele
+            and not re.match(r"^\d+$", part_allele[-1])
+        ):
+            part_allele[-1] = re.findall(r"^\d+", part_allele[-1])[0]
+        return (gene_str, *part_allele)
 
     @classmethod
     def join(cls, parts: Iterable[str]) -> Allele:
@@ -175,7 +183,7 @@ class KirAllele(Allele):
                 allele_str = allele_str[digit:]
             elif allele_str:  # 0 < len(allele_str) < digit
                 raise ValueError
-        if suffix_str:
+        if not self.ignore_suffix and suffix_str:
             if len(parts) > 1:
                 parts[-1] += suffix_str
             else:
@@ -325,12 +333,14 @@ class MethodResult(dict[str, CohortResult]):
         return text
 
 
-def str_to_allele(alleles: Iterable[str], allele_type: str) -> list[Allele]:
+def str_to_allele(
+    alleles: Iterable[str], allele_type: str, ignore_suffix: bool = False
+) -> list[Allele]:
     """Transform list of string to list of Allele object"""
     if allele_type.lower() == "hla":
-        return [HlaAllele(allele) for allele in alleles]
+        return [HlaAllele(allele, ignore_suffix=ignore_suffix) for allele in alleles]
     if allele_type.lower() == "kir":
-        return [KirAllele(allele) for allele in alleles]
+        return [KirAllele(allele, ignore_suffix=ignore_suffix) for allele in alleles]
     raise ValueError
 
 
@@ -428,6 +438,7 @@ def compare_cohort(
     cohort1: CohortInput,
     cohort2: CohortInput,
     allele_type: str,
+    ignore_suffix: bool = False,
 ) -> CohortResult:
     """
     Compare two cohorts
@@ -436,6 +447,7 @@ def compare_cohort(
         cohort1: The first cohort, a dictionary where key = sample IDs and values = lists of alleles for the sample.
         cohort2: The second cohort, same format as cohort1.
         allele_type: The type of allele in the cohorts, either "kir" or "hla".
+        ignore_suffix: Whether to ignore suffix in the alleles.
 
     Returns:
         A dict where keys = sample IDs and values = lists of MatchResult objects.
@@ -449,8 +461,12 @@ def compare_cohort(
     results_cohort = {}
     for sample_id in sorted(ids):
         results = compare_sample(
-            str_to_allele(cohort1.get(sample_id, []), allele_type),
-            str_to_allele(cohort2.get(sample_id, []), allele_type),
+            str_to_allele(
+                cohort1.get(sample_id, []), allele_type, ignore_suffix=ignore_suffix
+            ),
+            str_to_allele(
+                cohort2.get(sample_id, []), allele_type, ignore_suffix=ignore_suffix
+            ),
         )
         results_cohort[sample_id] = list(results)
     return CohortResult(results_cohort)
@@ -459,7 +475,8 @@ def compare_cohort(
 def compare_method(
     method_cohort_dict: Mapping[str, CohortInput],
     ref_method: str,
-    allele_type: str,
+    *args: Any,
+    **kwargs: Any,
 ) -> MethodResult:
     """
     Compare cohorts of alleles generated from different methods.
@@ -469,7 +486,7 @@ def compare_method(
     Args:
         method_cohort_dict: A dictionary where keys = method names and values = Cohort (see compare_cohort).
         ref_method: The name of the reference method.
-        allele_type: The type of allele in the cohorts, either "kir" or "hla".
+        *args, **kwargs: Set allele_type, ignore_suffix, See compare_cohort.
 
     Returns:
         A dictionary where keys = method names and values = CohortResult objects (see compare_cohort).
@@ -487,6 +504,7 @@ def compare_method(
         method_result[method] = compare_cohort(
             method_cohort_dict[ref_method],
             method_cohort_dict[method],
-            allele_type,
+            *args,
+            **kwargs,
         )
     return MethodResult(method_result)
