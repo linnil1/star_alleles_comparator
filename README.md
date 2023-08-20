@@ -155,3 +155,8 @@ app.run(debug=True)
 pip install pdoc
 pdoc star_allele_comp --docformat google
 ```
+
+## Details
+
+![allele](./describe_allele.png)
+![summary](./describe_summary.png)

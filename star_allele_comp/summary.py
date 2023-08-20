@@ -255,6 +255,7 @@ def print_all_summary(
     pd.set_option("display.max_columns", None)
     pd.set_option("display.width", None)
     pd.set_option("display.max_colwidth", 60)
+    pd.set_option("display.precision", 3)
 
     print("# Samples: ", len(df_result["id"].unique()), file=file_handler)
     print(df_result["id"].unique(), file=file_handler)
@@ -276,10 +277,10 @@ def save_all_summary(df_results: pd.DataFrame, path: str, compact: bool = True) 
     Save all summary to CSV files.
 
     Args:
-        df_results (pd.DataFrame): The DataFrame containing the summary data.
-        path (str): The prefix of the file path. The summary will be saved to path.xx.oo.csv.
-        compact (bool, optional): If True, save the compact version of the summary with the suffix ".compact.csv".
-                                  Defaults to True.
+        df_results: The DataFrame containing the summary data.
+        path: The prefix of the file path. The summary will be saved to path.xx.oo.csv.
+        compact: If True, save the compact version of the summary with the suffix ".compact.csv".
+                 Defaults to True.
     """
     for metric_name, meta in get_summary_meta().items():
         df_summary = meta["func"](df_results)
